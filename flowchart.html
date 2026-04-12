@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Music Recommender – Data Flow</title>
+  <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+  <style>
+    body {
+      font-family: sans-serif;
+      background: #0f0f0f;
+      color: #e0e0e0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 40px 20px;
+    }
+    h1 { font-size: 1.4rem; margin-bottom: 8px; color: #a78bfa; }
+    p  { font-size: 0.85rem; color: #888; margin-bottom: 32px; }
+    .mermaid { background: #1a1a2e; border-radius: 12px; padding: 32px; max-width: 720px; width: 100%; }
+  </style>
+</head>
+<body>
+  <h1>Music Recommender — Data Flow</h1>
+  <p>Input → Score each song → Rank → Top K Recommendations</p>
+
+  <div class="mermaid">
+flowchart TD
+    A([User Profile\ngenre · mood · numeric targets]) --> D
+    B([songs.csv\n20 songs]) --> C[Load all songs into memory]
+    C --> D[Start loop: pick next song]
+
+    D --> E{More songs\nto score?}
+    E -- No --> K[Sort all scored songs\nby score descending]
+    E -- Yes --> F[Categorical check\ngenre match? mood match?]
+
+    F --> G[Add +2.0 if genre matches\nAdd +1.0 if mood matches]
+    G --> H[Compute numeric proximity\nfor energy · danceability\nvalence · acousticness\ntempo · speechiness]
+    H --> I[Apply feature weights\nenergy ×1.5 · speechiness ×0.5\nothers ×1.0]
+    I --> J[Sum all points → total score\nStore song + score pair]
+    J --> D
+
+    K --> L[Slice top K results]
+    L --> M([Output: Ranked recommendations\nwith scores and explanations])
+
+    style A fill:#4c1d95,color:#fff,stroke:#7c3aed
+    style B fill:#1e3a5f,color:#fff,stroke:#3b82f6
+    style M fill:#064e3b,color:#fff,stroke:#10b981
+    style E fill:#78350f,color:#fff,stroke:#f59e0b
+  </div>
+
+  <script>
+    mermaid.initialize({ startOnLoad: true, theme: "dark" });
+  </script>
+</body>
+</html>

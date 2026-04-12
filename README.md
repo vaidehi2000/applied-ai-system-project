@@ -11,23 +11,83 @@ Your goal is to:
 - Evaluate what your system gets right and wrong
 - Reflect on how this mirrors real world AI recommenders
 
-Replace this paragraph with your own summary of what your version does.
+This simulation builds a content-based music recommender that scores songs by how closely their audio features (energy, valence, acousticness, danceability, tempo) match a user's taste profile. It prioritizes explainability — each recommendation includes a plain-language reason — and uses a proximity-based scoring rule rather than treating higher feature values as inherently better.
 
 ---
 
 ## How The System Works
 
-Explain your design in plain language.
+Real-world recommenders like Spotify and YouTube combine two signals: what similar users listened to (collaborative filtering) and what the song itself sounds like (content-based filtering). At scale they use matrix factorization and deep neural networks across millions of users and songs. This simulation focuses on the content-based side — it builds a taste profile directly from a user's stated preferences and scores every song by how closely its audio features match that profile. The priority is transparency: every recommendation comes with a plain-language explanation of why the song was chosen, something large systems often sacrifice for accuracy.
 
-Some prompts to answer:
+### Song Features
 
-- What features does each `Song` use in your system
-  - For example: genre, mood, energy, tempo
-- What information does your `UserProfile` store
-- How does your `Recommender` compute a score for each song
-- How do you choose which songs to recommend
+Each `Song` object stores the following attributes:
 
-You can include a simple diagram or bullet list if helpful.
+| Feature | Type | What it captures |
+|---|---|---|
+| `id` | int | Unique identifier |
+| `title` | str | Song name |
+| `artist` | str | Artist name |
+| `genre` | str | Musical category (e.g. lofi, pop, rock) |
+| `mood` | str | Emotional feel (e.g. chill, happy, intense) |
+| `energy` | float (0–1) | Calm vs. intense — highest-weight numeric feature |
+| `tempo_bpm` | float | Speed in beats per minute (normalized before scoring) |
+| `valence` | float (0–1) | Emotional positivity — sad vs. happy sound |
+| `danceability` | float (0–1) | How suitable the song is for dancing |
+| `acousticness` | float (0–1) | Acoustic vs. electronic production |
+
+### UserProfile Features
+
+Each `UserProfile` stores the user's stated preferences:
+
+| Field | Type | Role |
+|---|---|---|
+| `favorite_genre` | str | Used as a categorical bonus in scoring |
+| `favorite_mood` | str | Used as a categorical bonus in scoring |
+| `target_energy` | float (0–1) | Core numeric anchor for proximity scoring |
+| `likes_acoustic` | bool | Shifts acousticness preference high or low |
+
+### Scoring Rule (one song)
+
+Each song receives a score based on proximity to the user's preferences — closer = higher score, not simply louder or faster:
+
+```
+score = +2.0  (if song.genre == user.favorite_genre)
+      + +1.0  (if song.mood  == user.favorite_mood)
+      + 1.5 × (1 - |user.target_energy        - song.energy|)
+      + 1.0 × (1 - |user.target_danceability  - song.danceability|)
+      + 1.0 × (1 - |user.target_valence        - song.valence|)
+      + 1.0 × (1 - |user.target_acousticness   - song.acousticness|)
+      + 1.0 × (1 - |user.target_tempo_norm      - song.tempo_norm|)
+      + 0.5 × (1 - |user.target_speechiness    - song.speechiness|)
+```
+
+**Maximum possible score: ~9.0**
+
+| Component | Points | Why |
+|---|---|---|
+| Genre match | +2.0 | Strongest structural signal; only 1–3 songs per genre in catalog, so a match is rare and meaningful |
+| Mood match | +1.0 | Mood crosses genres (e.g. "chill" appears in lofi and ambient), so it is a weaker but still useful signal |
+| Energy ×1.5 | up to 1.5 | Most immediately felt quality — a calm user hearing an intense song is the worst mismatch |
+| Danceability, Valence, Acousticness, Tempo ×1.0 | up to 1.0 each | Equal contributors that round out the sonic picture |
+| Speechiness ×0.5 | up to 0.5 | Low variance across the catalog; contributes less discriminating power |
+
+Tempo is normalized to 0–1 before scoring using `(bpm - 60) / (168 - 60)` so it stays on the same scale as the other features.
+
+### Sample Output
+
+![Terminal output showing top recommendations](terminal_screenshot.png)
+
+### Ranking Rule (the list)
+
+After scoring, songs are sorted descending by score and the top `k` are returned. Every song in the catalog is scored before any are cut — this prevents early filtering from skewing the results.
+
+### Potential Biases
+
+- **Genre over-prioritization:** The +2.0 genre bonus can push a poorly matching song (wrong mood, wrong energy) above a song that fits the user's vibe perfectly but belongs to a neighboring genre. A Sunday Acoustic listener might genuinely love a nostalgic country track, but if the catalog only has one folk song it will always outrank everything else by default.
+- **Sparse genre penalty:** Profiles whose favorite genre has only one or two songs in the catalog (e.g. `edm`, `folk`) get fewer genre bonus opportunities, making numeric proximity do most of the heavy lifting — the system effectively behaves differently across profiles.
+- **Mood label rigidity:** Mood is an exact string match. "Euphoric" and "intense" are emotionally close but score zero for a user who prefers "intense", potentially burying the best workout track in the catalog.
+- **No diversity enforcement:** The top-k results can all be from the same genre if that genre scores consistently high, leaving the user with a repetitive list rather than a varied set of recommendations.
 
 ---
 
