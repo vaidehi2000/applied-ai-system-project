@@ -170,18 +170,20 @@ def score_songs(user_prefs: Dict, songs: List[Dict], k: int = 5) -> List[Tuple[D
         reasons = []
 
         # --- Categorical bonuses ---
+        # WEIGHT SHIFT TEST: genre halved (2.0 -> 1.0), energy doubled (1.5 -> 3.0)
         if song.get("genre") == user_prefs.get("genre"):
-            score += 2.0
+            score += 1.0
             reasons.append(f"Matches your favorite genre ({song['genre']})")
 
-        if song.get("mood") == user_prefs.get("mood"):
-            score += 1.0
-            reasons.append(f"Matches your preferred mood ({song['mood']})")
+        # FEATURE REMOVAL TEST: mood check disabled to observe ranking sensitivity
+        # if song.get("mood") == user_prefs.get("mood"):
+        #     score += 1.0
+        #     reasons.append(f"Matches your preferred mood ({song['mood']})")
 
         # --- Numeric proximity scores ---
         if "energy" in user_prefs:
             energy_score = 1 - abs(user_prefs["energy"] - song["energy"])
-            score += 1.5 * energy_score
+            score += 3.0 * energy_score
             reasons.append(f"Energy match: {energy_score:.2f}/1.00 (song={song['energy']}, you={user_prefs['energy']})")
 
         if "danceability" in user_prefs:
