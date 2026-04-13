@@ -76,7 +76,9 @@ Tempo is normalized to 0–1 before scoring using `(bpm - 60) / (168 - 60)` so i
 
 ### Sample Output
 
-![Terminal output showing top recommendations](terminal_screenshot.png)
+![Song Recommender](screenshots/song_recommender.png)
+
+![Terminal output showing top recommendations](screenshots/terminal_screenshot.png)
 
 ### Ranking Rule (the list)
 
@@ -123,6 +125,37 @@ pytest
 ```
 
 You can add more tests in `tests/test_recommender.py`.
+
+---
+
+## Profile Results
+
+### High-Energy Pop
+![PROFILE High-Energy Pop](screenshots/PROFILE%20High-Energy%20Pop.png)
+
+### Chill Lofi
+![PROFILE Chill Lofi](screenshots/PROFILE%20Chill%20Lofi.png)
+
+### Deep Intense Rock
+![PROFILE Deep Intense Rock](screenshots/PROFILE%20Deep%20Intense%20Rock.png)
+
+### Sad But Happy *(adversarial)*
+![PROFILE Sad But Happy](screenshots/PROFILE%20Sad%20But%20Happy.png)
+
+### Intense Folkie *(adversarial)*
+![PROFILE Intense Folkie](screenshots/PROFILE%20Intense%20Folkie.png)
+
+### K-Pop Fan *(adversarial)*
+![PROFILE Kpop Fan](screenshots/PROFILE%20Kpop%20Fan.png)
+
+### The Void *(adversarial)*
+![PROFILE The Void](screenshots/PROFILE%20The%20Void.png)
+
+### Perfectly Average *(adversarial)*
+![PROFILE Perfectly Average](screenshots/PROFILE%20Perfectly%20Average.png)
+
+### Podcast Listener *(adversarial)*
+![PROFILE Podcast Listener](screenshots/PROFILE%20Podcast%20Listener.png)
 
 ---
 
