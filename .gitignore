@@ -9,6 +9,7 @@ env/
 venv/
 .env/
 .env
+.claude/
 
 # OS files
 .DS_Store

@@ -163,9 +163,54 @@ def load_songs(csv_path: str) -> List[Dict]:
     logger.info("Loaded %d songs from %s", len(songs), csv_path)
     return songs
 
+_UNIT_FIELDS = ("energy", "valence", "danceability", "acousticness", "speechiness")
+_TEMPO_MIN_VALID, _TEMPO_MAX_VALID = 20, 300
+
+def _validate_prefs(user_prefs: Dict) -> Dict:
+    """Return a sanitized copy of user_prefs with out-of-range values clamped and warnings logged."""
+    prefs = dict(user_prefs)
+
+    if not prefs.get("genre"):
+        logger.warning("No 'genre' in user prefs — genre bonus will be skipped")
+    if not prefs.get("mood"):
+        logger.warning("No 'mood' in user prefs — mood bonus will be skipped")
+
+    for field in _UNIT_FIELDS:
+        if field not in prefs:
+            continue
+        val = prefs[field]
+        if not isinstance(val, (int, float)):
+            logger.warning("'%s' must be a number (got %r) — skipping feature", field, val)
+            del prefs[field]
+            continue
+        if not (0.0 <= val <= 1.0):
+            clamped = max(0.0, min(1.0, val))
+            logger.warning(
+                "'%s' value %.2f is out of 0–1 range — clamped to %.2f", field, val, clamped
+            )
+            prefs[field] = clamped
+
+    if "tempo_bpm" in prefs:
+        val = prefs["tempo_bpm"]
+        if not isinstance(val, (int, float)):
+            logger.warning("'tempo_bpm' must be a number (got %r) — skipping feature", val)
+            del prefs["tempo_bpm"]
+        elif not (_TEMPO_MIN_VALID <= val <= _TEMPO_MAX_VALID):
+            clamped = max(_TEMPO_MIN_VALID, min(_TEMPO_MAX_VALID, val))
+            logger.warning(
+                "'tempo_bpm' value %.1f is out of %d–%d range — clamped to %.1f",
+                val, _TEMPO_MIN_VALID, _TEMPO_MAX_VALID, clamped,
+            )
+            prefs["tempo_bpm"] = clamped
+
+    return prefs
+
+
 def score_songs(user_prefs: Dict, songs: List[Dict], k: int = 5) -> List[Tuple[Dict, float, str]]:
     """Score every song against user preferences and return all (song, score, explanation) tuples."""
     TEMPO_MIN, TEMPO_MAX = 60, 168  # BPM range across catalog
+
+    user_prefs = _validate_prefs(user_prefs)
 
     # Genre coverage checks
     user_genre = user_prefs.get("genre")
