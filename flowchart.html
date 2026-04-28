@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Music Recommender – Data Flow</title>
+  <title>Music Recommender – System Architecture</title>
   <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
   <style>
     body {
@@ -17,36 +17,55 @@
     }
     h1 { font-size: 1.4rem; margin-bottom: 8px; color: #a78bfa; }
     p  { font-size: 0.85rem; color: #888; margin-bottom: 32px; }
-    .mermaid { background: #1a1a2e; border-radius: 12px; padding: 32px; max-width: 720px; width: 100%; }
+    .mermaid { background: #1a1a2e; border-radius: 12px; padding: 32px; max-width: 860px; width: 100%; }
   </style>
 </head>
 <body>
-  <h1>Music Recommender — Data Flow</h1>
-  <p>Input → Score each song → Rank → Top K Recommendations</p>
+  <h1>Music Recommender — System Architecture</h1>
+  <p>Input → Validate → Score → Rank → RAG (Claude) → Output · Testing runs in parallel</p>
 
   <div class="mermaid">
 flowchart TD
-    A([User Profile\ngenre · mood · numeric targets]) --> D
-    B([songs.csv\n20 songs]) --> C[Load all songs into memory]
-    C --> D[Start loop: pick next song]
+    A([User Profile\ngenre · mood · numeric targets]) --> V
+    B([songs.csv\n20 songs]) --> C[Load songs into memory\nload_songs]
 
-    D --> E{More songs\nto score?}
-    E -- No --> K[Sort all scored songs\nby score descending]
-    E -- Yes --> F[Categorical check\ngenre match? mood match?]
+    V["Input Validation\n_validate_prefs\nclamp out-of-range values\nwarn on missing fields"]
+    A --> V
+    V --> D
 
-    F --> G[Add +2.0 if genre matches\nAdd +1.0 if mood matches]
-    G --> H[Compute numeric proximity\nfor energy · danceability\nvalence · acousticness\ntempo · speechiness]
-    H --> I[Apply feature weights\nenergy ×1.5 · speechiness ×0.5\nothers ×1.0]
-    I --> J[Sum all points → total score\nStore song + score pair]
-    J --> D
+    C --> D[Score every song\nscore_songs]
 
-    K --> L[Slice top K results]
-    L --> M([Output: Ranked recommendations\nwith scores and explanations])
+    D --> F[Categorical bonus\n+1.0 genre match]
+    F --> G[Numeric proximity\nenergy ×3.0\ndanceability · valence\nacousticness · tempo ×1.0\nspeechiness ×0.5]
+    G --> H[Sum → total score\nattach explanation string]
+    H --> D2{All songs\nscored?}
+    D2 -- No, next song --> D
+    D2 -- Yes --> K[Sort descending\nslice top K]
+
+    K --> M([CLI Output\nRanked songs + scores\n+ plain-language reasons])
+    K --> R[RAG Step\nTop K songs retrieved\nas context]
+
+    R --> AI[Claude API\nclaude-haiku-4-5\nGenerates 2-3 sentence\nnatural-language summary\ngrounded in retrieved songs]
+    AI --> AIS([AI Summary\nappended to CLI output])
+
+    LOG[Logging\nINFO: songs loaded · profile scoring · AI success\nWARNING: missing genre · sparse catalog · no API key\nERROR: API failure]
+    V -.->|guardrail events| LOG
+    D -.->|scoring events| LOG
+    AI -.->|API events| LOG
+
+    TEST[Test Suite\npytest · test_recommender.py\nVerifies recommend sorts by score\nVerifies explain returns non-empty string\n9 adversarial profiles run in main.py]
+    M -.->|human review of results| TEST
 
     style A fill:#4c1d95,color:#fff,stroke:#7c3aed
     style B fill:#1e3a5f,color:#fff,stroke:#3b82f6
     style M fill:#064e3b,color:#fff,stroke:#10b981
-    style E fill:#78350f,color:#fff,stroke:#f59e0b
+    style AIS fill:#064e3b,color:#fff,stroke:#10b981
+    style V fill:#7c2d12,color:#fff,stroke:#ea580c
+    style R fill:#1e3a5f,color:#fff,stroke:#3b82f6
+    style AI fill:#4c1d95,color:#fff,stroke:#7c3aed
+    style LOG fill:#1f2937,color:#ccc,stroke:#6b7280
+    style TEST fill:#1f2937,color:#ccc,stroke:#6b7280
+    style D2 fill:#78350f,color:#fff,stroke:#f59e0b
   </div>
 
   <script>
