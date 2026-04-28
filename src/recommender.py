@@ -30,17 +30,18 @@ class UserProfile:
     Numeric targets (0.0–1.0) are used in proximity scoring:
         feature_score = 1 - |target - song.feature|
     Categorical fields (genre, mood) add bonus points on match.
+    All fields have defaults so callers only need to specify what they care about.
     """
-    name: str
-    favorite_genre: str
-    favorite_mood: str
+    name: str = ""
+    favorite_genre: str = ""
+    favorite_mood: str = ""
     # Numeric taste targets — each maps directly to a Song feature
-    target_energy: float        # 0=calm, 1=intense
-    target_valence: float       # 0=sad, 1=happy
-    target_danceability: float  # 0=still, 1=danceable
-    target_acousticness: float  # 0=electronic, 1=acoustic
-    target_speechiness: float   # 0=instrumental, 1=spoken
-    target_tempo_bpm: float     # raw BPM (normalized before scoring)
+    target_energy: float = 0.5        # 0=calm, 1=intense
+    target_valence: float = 0.5       # 0=sad, 1=happy
+    target_danceability: float = 0.5  # 0=still, 1=danceable
+    target_acousticness: float = 0.5  # 0=electronic, 1=acoustic
+    target_speechiness: float = 0.05  # 0=instrumental, 1=spoken
+    target_tempo_bpm: float = 114.0   # raw BPM (normalized before scoring)
 
 
 # ---------------------------------------------------------------------------
