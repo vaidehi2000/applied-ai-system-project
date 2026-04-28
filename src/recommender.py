@@ -159,8 +159,16 @@ class Recommender:
         return [title_to_song[song_dict["title"]] for song_dict, _, _ in scored]
 
     def explain_recommendation(self, user: UserProfile, song: Song) -> str:
-        # TODO: Implement explanation logic
-        return "Explanation placeholder"
+        reasons = []
+        if song.genre == user.favorite_genre:
+            reasons.append(f"Matches your favorite genre ({song.genre})")
+        if song.mood == user.favorite_mood:
+            reasons.append(f"Matches your preferred mood ({song.mood})")
+        energy_score = 1 - abs(user.target_energy - song.energy)
+        reasons.append(f"Energy match: {energy_score:.2f}/1.00 (song={song.energy}, you={user.target_energy})")
+        valence_score = 1 - abs(user.target_valence - song.valence)
+        reasons.append(f"Valence match: {valence_score:.2f}/1.00")
+        return " | ".join(reasons)
 
 def load_songs(csv_path: str) -> List[Dict]:
     """Read songs.csv and return a list of dicts with numeric fields cast to int or float."""
