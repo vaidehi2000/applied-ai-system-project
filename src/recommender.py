@@ -135,8 +135,28 @@ class Recommender:
         self.songs = songs
 
     def recommend(self, user: UserProfile, k: int = 5) -> List[Song]:
-        # TODO: Implement recommendation logic
-        return self.songs[:k]
+        user_dict = {
+            "genre": user.favorite_genre,
+            "mood": user.favorite_mood,
+            "energy": user.target_energy,
+            "valence": user.target_valence,
+            "danceability": user.target_danceability,
+            "acousticness": user.target_acousticness,
+            "speechiness": user.target_speechiness,
+            "tempo_bpm": user.target_tempo_bpm,
+        }
+        song_dicts = [
+            {
+                "id": s.id, "title": s.title, "artist": s.artist,
+                "genre": s.genre, "mood": s.mood, "energy": s.energy,
+                "tempo_bpm": s.tempo_bpm, "valence": s.valence,
+                "danceability": s.danceability, "acousticness": s.acousticness,
+            }
+            for s in self.songs
+        ]
+        scored = score_songs(user_dict, song_dicts, k=k)
+        title_to_song = {s.title: s for s in self.songs}
+        return [title_to_song[song_dict["title"]] for song_dict, _, _ in scored]
 
     def explain_recommendation(self, user: UserProfile, song: Song) -> str:
         # TODO: Implement explanation logic
@@ -270,7 +290,7 @@ def score_songs(user_prefs: Dict, songs: List[Dict], k: int = 5) -> List[Tuple[D
             tempo_score = 1 - abs(user_tempo_norm - song_tempo_norm)
             score += 1.0 * tempo_score
 
-        if "speechiness" in user_prefs:
+        if "speechiness" in user_prefs and "speechiness" in song:
             speech_score = 1 - abs(user_prefs["speechiness"] - song["speechiness"])
             score += 0.5 * speech_score
 
