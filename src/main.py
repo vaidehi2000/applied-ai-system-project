@@ -1,16 +1,22 @@
 """
 Command line runner for the Music Recommender Simulation.
-
-This file helps you quickly run and test your recommender.
-
-You will implement the functions in recommender.py:
-- load_songs
-- score_song
-- recommend_songs
 """
 
+import logging
 from pathlib import Path
 from recommender import load_songs, recommend_songs, generate_rag_explanation
+
+# Configure logging once at the entry point: INFO to console + persistent log file
+_LOG_FILE = Path(__file__).parent.parent / "recommender.log"
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(levelname)-8s %(message)s",
+    handlers=[
+        logging.StreamHandler(),
+        logging.FileHandler(_LOG_FILE, encoding="utf-8"),
+    ],
+)
+logger = logging.getLogger("main")
 
 CSV_PATH = Path(__file__).parent.parent / "data" / "songs.csv"
 
@@ -66,6 +72,7 @@ def main() -> None:
     }
 
     for profile_name, user_prefs in profiles.items():
+        logger.info("Scoring profile: %s", profile_name)
         recommendations = recommend_songs(user_prefs, songs, k=5)
 
         print("=" * 54)

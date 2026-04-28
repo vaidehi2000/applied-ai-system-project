@@ -1,5 +1,8 @@
+import logging
 from typing import List, Dict, Tuple, Optional
 from dataclasses import dataclass
+
+logger = logging.getLogger("recommender")
 
 @dataclass
 class Song:
@@ -157,11 +160,28 @@ def load_songs(csv_path: str) -> List[Dict]:
                 if field in row:
                     row[field] = float(row[field])
             songs.append(row)
+    logger.info("Loaded %d songs from %s", len(songs), csv_path)
     return songs
 
 def score_songs(user_prefs: Dict, songs: List[Dict], k: int = 5) -> List[Tuple[Dict, float, str]]:
     """Score every song against user preferences and return all (song, score, explanation) tuples."""
     TEMPO_MIN, TEMPO_MAX = 60, 168  # BPM range across catalog
+
+    # Genre coverage checks
+    user_genre = user_prefs.get("genre")
+    if user_genre:
+        genre_count = sum(1 for s in songs if s.get("genre") == user_genre)
+        if genre_count == 0:
+            logger.warning(
+                "Genre '%s' not found in catalog — falling back to numeric-only scoring",
+                user_genre,
+            )
+        elif genre_count <= 2:
+            logger.warning(
+                "Genre '%s' has only %d song(s) in catalog — genre bonus may dominate results",
+                user_genre,
+                genre_count,
+            )
 
     scored = []
 
@@ -229,7 +249,11 @@ def generate_rag_explanation(user_prefs: Dict, top_songs: List[Dict]) -> str:
     import anthropic
 
     load_dotenv()
-    client = anthropic.Anthropic(api_key=os.environ.get("ANTHROPIC_API_KEY"))
+    api_key = os.environ.get("ANTHROPIC_API_KEY")
+    if not api_key:
+        logger.warning("ANTHROPIC_API_KEY is not set — AI summaries will be unavailable")
+        return "[AI summary unavailable: API key not configured]"
+    client = anthropic.Anthropic(api_key=api_key)
 
     # Format retrieved songs into a readable block for the prompt
     song_lines = []
@@ -252,11 +276,14 @@ def generate_rag_explanation(user_prefs: Dict, top_songs: List[Dict]) -> str:
     )
 
     try:
+        logger.info("Requesting AI summary for top %d songs", len(top_songs))
         message = client.messages.create(
             model="claude-haiku-4-5-20251001",
             max_tokens=256,
             messages=[{"role": "user", "content": prompt}],
         )
+        logger.info("AI summary generated successfully")
         return message.content[0].text
     except Exception as e:
+        logger.error("Claude API call failed: %s", e)
         return f"[AI summary unavailable: {e}]"
