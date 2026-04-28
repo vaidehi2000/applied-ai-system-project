@@ -218,3 +218,45 @@ def score_songs(user_prefs: Dict, songs: List[Dict], k: int = 5) -> List[Tuple[D
 def recommend_songs(user_prefs: Dict, songs: List[Dict], k: int = 5) -> List[Tuple[Dict, float, str]]:
     """Return the top-k songs sorted by score descending using score_songs."""
     return sorted(score_songs(user_prefs, songs), key=lambda x: x[1], reverse=True)[:k]
+
+def generate_rag_explanation(user_prefs: Dict, top_songs: List[Dict]) -> str:
+    """
+    RAG step: retrieve the top songs (already scored), then send them to Claude
+    to generate a natural-language explanation grounded in that retrieved data.
+    """
+    import os
+    from dotenv import load_dotenv
+    import anthropic
+
+    load_dotenv()
+    client = anthropic.Anthropic(api_key=os.environ.get("ANTHROPIC_API_KEY"))
+
+    # Format retrieved songs into a readable block for the prompt
+    song_lines = []
+    for i, song in enumerate(top_songs, 1):
+        song_lines.append(
+            f"{i}. \"{song['title']}\" by {song['artist']} "
+            f"(genre={song['genre']}, mood={song['mood']}, "
+            f"energy={song['energy']}, valence={song['valence']})"
+        )
+    retrieved = "\n".join(song_lines)
+
+    # Build a concise user preference summary
+    prefs_summary = ", ".join(f"{k}={v}" for k, v in user_prefs.items())
+
+    prompt = (
+        f"A music listener has these preferences: {prefs_summary}.\n\n"
+        f"Based only on the following songs retrieved from the catalog:\n{retrieved}\n\n"
+        f"In 2-3 sentences, explain why these songs are a good match for this listener. "
+        f"Be specific — reference the song titles and their attributes."
+    )
+
+    try:
+        message = client.messages.create(
+            model="claude-haiku-4-5-20251001",
+            max_tokens=256,
+            messages=[{"role": "user", "content": prompt}],
+        )
+        return message.content[0].text
+    except Exception as e:
+        return f"[AI summary unavailable: {e}]"

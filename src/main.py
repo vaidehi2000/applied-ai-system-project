@@ -10,7 +10,7 @@ You will implement the functions in recommender.py:
 """
 
 from pathlib import Path
-from recommender import load_songs, recommend_songs
+from recommender import load_songs, recommend_songs, generate_rag_explanation
 
 CSV_PATH = Path(__file__).parent.parent / "data" / "songs.csv"
 
@@ -81,7 +81,10 @@ def main() -> None:
                 print(f"      • {reason}")
             print("    " + "-" * 46)
 
-        print()
+        # RAG: send retrieved songs to Claude for a natural-language summary
+        top_songs = [song for song, _, _ in recommendations]
+        ai_summary = generate_rag_explanation(user_prefs, top_songs)
+        print(f"\n  AI Summary:\n  {ai_summary}\n")
 
 
 if __name__ == "__main__":
