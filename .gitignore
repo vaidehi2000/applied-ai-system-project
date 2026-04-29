@@ -16,3 +16,6 @@ venv/
 
 # Pytest cache
 .pytest_cache/
+
+# Runtime logs
+recommender.log
