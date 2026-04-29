@@ -1,5 +1,6 @@
 # 🎵 SongPicker: Applied AI Music Recommender
 
+*Demo:** [Watch on Loom](https://www.loom.com/share/abcb413eed0b47fdbf9274c9f679a40c)
 ## Base Project
 
 This project extends the **Music Recommender Simulation** built in Modules 1–3 of CodePath AI110. The original project's goal was to simulate how content-based filtering works by scoring songs against a user's taste profile using weighted proximity math. It produced ranked recommendations with plain-language explanations and documented its own biases through a model card. It had no AI API integration, no input validation, and no logging.
