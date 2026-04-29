@@ -85,7 +85,7 @@ flowchart TD
     M -.->|human review of results| TEST
 ```
 
-> For an interactive version open [`flowchart.html`](flowchart.html) in a browser.
+> Static diagram: [`assets/system_diagram.png`](assets/system_diagram.png) — For an interactive version open [`flowchart.html`](flowchart.html) in a browser.
 
 **Data flow summary:**
 User Profile → Input Validation → Score every song → Sort/Rank → CLI Output + RAG (Gemini) → AI Summary. Logging runs throughout all steps. pytest verifies core logic independently.
@@ -293,31 +293,31 @@ AI tools helped a lot during development — specifically for spotting patterns 
 ## Profile Results
 
 ### High-Energy Pop
-![PROFILE High-Energy Pop](screenshots/PROFILE%20High-Energy%20Pop.png)
+![PROFILE High-Energy Pop](assets/PROFILE%20High-Energy%20Pop.png)
 
 ### Chill Lofi
-![PROFILE Chill Lofi](screenshots/PROFILE%20Chill%20Lofi.png)
+![PROFILE Chill Lofi](assets/PROFILE%20Chill%20Lofi.png)
 
 ### Deep Intense Rock
-![PROFILE Deep Intense Rock](screenshots/PROFILE%20Deep%20Intense%20Rock.png)
+![PROFILE Deep Intense Rock](assets/PROFILE%20Deep%20Intense%20Rock.png)
 
 ### Sad But Happy *(adversarial)*
-![PROFILE Sad But Happy](screenshots/PROFILE%20Sad%20But%20Happy.png)
+![PROFILE Sad But Happy](assets/PROFILE%20Sad%20But%20Happy.png)
 
 ### Intense Folkie *(adversarial)*
-![PROFILE Intense Folkie](screenshots/PROFILE%20Intense%20Folkie.png)
+![PROFILE Intense Folkie](assets/PROFILE%20Intense%20Folkie.png)
 
 ### K-Pop Fan *(adversarial)*
-![PROFILE Kpop Fan](screenshots/PROFILE%20Kpop%20Fan.png)
+![PROFILE Kpop Fan](assets/PROFILE%20Kpop%20Fan.png)
 
 ### The Void *(adversarial)*
-![PROFILE The Void](screenshots/PROFILE%20The%20Void.png)
+![PROFILE The Void](assets/PROFILE%20The%20Void.png)
 
 ### Perfectly Average *(adversarial)*
-![PROFILE Perfectly Average](screenshots/PROFILE%20Perfectly%20Average.png)
+![PROFILE Perfectly Average](assets/PROFILE%20Perfectly%20Average.png)
 
 ### Podcast Listener *(adversarial)*
-![PROFILE Podcast Listener](screenshots/PROFILE%20Podcast%20Listener.png)
+![PROFILE Podcast Listener](assets/PROFILE%20Podcast%20Listener.png)
 
 ---
 
