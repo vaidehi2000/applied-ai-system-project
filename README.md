@@ -1,4 +1,4 @@
-# 🎵 SongPicker — Applied AI Music Recommender
+# 🎵 SongPicker: Applied AI Music Recommender
 
 ## Base Project
 
@@ -10,9 +10,9 @@ This project extends the **Music Recommender Simulation** built in Modules 1–3
 
 | Feature | What it does |
 |---|---|
-| **RAG (Retrieval-Augmented Generation)** | Top scored songs are retrieved and sent to Gemini as context. Gemini generates a natural-language summary grounded in those specific songs — not a generic response. |
+| **RAG (Retrieval-Augmented Generation)** | Top scored songs are retrieved and sent to Gemini as context. Gemini generates a natural-language summary grounded in those specific songs, not a generic response. |
 | **Input Validation / Guardrails** | `_validate_prefs()` checks every user preference before scoring. Out-of-range values are clamped (e.g. `energy=1.5` → `1.0`) and a warning is logged. |
-| **Structured Logging** | INFO and WARNING lines track every key event — songs loaded, profile scored, genre not found in catalog, API key missing, AI call succeeded or failed. Persisted to `recommender.log`. |
+| **Structured Logging** | INFO and WARNING lines track every key event: songs loaded, profile scored, genre not found in catalog, API key missing, AI call succeeded or failed. Persisted to `recommender.log`. |
 | **Implemented Recommender class** | `Recommender.recommend()` and `Recommender.explain_recommendation()` are now fully functional, not stubs. |
 | **Expanded adversarial testing** | 6 edge-case profiles deliberately expose system failure modes (missing genre, conflicting signals, extreme values). |
 
@@ -20,7 +20,7 @@ This project extends the **Music Recommender Simulation** built in Modules 1–3
 
 ## How The System Works
 
-Real-world recommenders like Spotify and YouTube combine collaborative filtering (what similar users listened to) and content-based filtering (what the song itself sounds like). This simulation focuses on the content-based side — it builds a taste profile from a user's stated preferences and scores every song by how closely its audio features match. The priority is transparency: every recommendation includes a plain-language reason, and Gemini adds a natural-language summary grounded in the actual retrieved songs.
+Real-world recommenders like Spotify and YouTube combine collaborative filtering (what similar users listened to) and content-based filtering (what the song itself sounds like). This simulation focuses on the content-based side. It builds a taste profile from a user's stated preferences and scores every song by how closely its audio features match. The priority is transparency: every recommendation includes a plain-language reason, and Gemini adds a natural-language summary grounded in the actual retrieved songs.
 
 ### Song Features
 
@@ -28,7 +28,7 @@ Real-world recommenders like Spotify and YouTube combine collaborative filtering
 |---|---|---|
 | `genre` | str | Musical category (e.g. lofi, pop, rock) |
 | `mood` | str | Emotional feel (e.g. chill, happy, intense) |
-| `energy` | float (0–1) | Calm vs. intense — highest-weight numeric feature |
+| `energy` | float (0–1) | Calm vs. intense (highest-weight numeric feature) |
 | `tempo_bpm` | float | Speed in BPM (normalized before scoring) |
 | `valence` | float (0–1) | Sad vs. happy emotional tone |
 | `danceability` | float (0–1) | How suitable the song is for dancing |
@@ -85,7 +85,7 @@ flowchart TD
     M -.->|human review of results| TEST
 ```
 
-> Static diagram: [`assets/system_diagram.png`](assets/system_diagram.png) — For an interactive version open [`flowchart.html`](flowchart.html) in a browser.
+> Static diagram: [`assets/system_diagram.png`](assets/system_diagram.png). For an interactive version, open [`flowchart.html`](flowchart.html) in a browser.
 
 **Data flow summary:**
 User Profile → Input Validation → Score every song → Sort/Rank → CLI Output + RAG (Gemini) → AI Summary. Logging runs throughout all steps. pytest verifies core logic independently.
@@ -127,7 +127,7 @@ Create a `.env` file in the project root:
 GEMINI_API_KEY=your-key-here
 ```
 
-> The system runs without an API key — scoring and ranking work normally. Only the AI summary step will be skipped with a warning logged.
+> The system runs without an API key. Scoring and ranking work normally. Only the AI summary step will be skipped with a warning logged.
 
 ### 5. Run the recommender
 
@@ -145,7 +145,7 @@ pytest
 
 ## Sample Interactions
 
-### Example 1 — High-Energy Pop
+### Example 1: High-Energy Pop
 
 **Input:**
 ```python
@@ -180,7 +180,7 @@ pytest
 
 ---
 
-### Example 2 — Chill Lofi
+### Example 2: Chill Lofi
 
 **Input:**
 ```python
@@ -215,7 +215,7 @@ pytest
 
 ---
 
-### Example 3 — K-Pop Fan *(adversarial)*
+### Example 3: K-Pop Fan *(adversarial)*
 
 **Input:**
 ```python
@@ -255,7 +255,7 @@ WARNING  Genre 'k-pop' not found in catalog — falling back to numeric-only sco
 ## Design Decisions
 
 **Why energy gets 3× weight:**
-Energy is the most immediately felt quality in music. A calm person hearing an intense song is the most jarring possible mismatch — more so than a tempo or danceability gap. The 3× weight reflects that.
+Energy is the most immediately felt quality in music. A calm person hearing an intense song is the most jarring possible mismatch, more so than a tempo or danceability gap. The 3× weight reflects that.
 
 **Why genre bonus is 1.0, not 2.0:**
 The original base project used +2.0 for genre. Through adversarial testing, this caused the only folk song in the catalog ("Pine & Candle") to rank #1 for an Intense Folkie profile even though its energy was 0.31 against a target of 0.95. Halving the genre bonus reduces this without eliminating it entirely.
@@ -264,7 +264,7 @@ The original base project used +2.0 for genre. Through adversarial testing, this
 Mood labels are exact string matches. "Intense" and "angry" feel emotionally close but score zero similarity. During experiments, enabling mood bonus produced worse results than disabling it for several adversarial profiles. A future fix would use semantic similarity rather than exact strings.
 
 **Why RAG instead of a standalone AI call:**
-The Gemini prompt is grounded in the actual retrieved songs, not a general description of the user profile. This means the AI summary references specific titles and attributes rather than generating generic advice — which is the point of RAG.
+The Gemini prompt is grounded in the actual retrieved songs, not a general description of the user profile. This means the AI summary references specific titles and attributes rather than generating generic advice. That is the point of RAG.
 
 **Why clamp instead of reject on bad input:**
 The system should degrade gracefully. If a UI passes `energy=1.2`, crashing is worse than clamping to `1.0` and warning. The guardrail logs the problem without breaking the user experience.
@@ -273,21 +273,21 @@ The system should degrade gracefully. If a UI passes `energy=1.2`, crashing is w
 
 ## Testing Summary
 
-Nine profiles total — three standard, six adversarial. The standard ones worked mostly as expected. Chill Lofi returned three lofi tracks in the top four, and High-Energy Pop put "Gym Hero" and "Sunrise City" at the top, which made sense. Deep Intense Rock surfaced "Storm Runner" and "Iron Cathedral," which also felt right.
+Nine profiles total: three standard and six adversarial. The standard ones worked mostly as expected. Chill Lofi returned three lofi tracks in the top four, and High-Energy Pop put "Gym Hero" and "Sunrise City" at the top, which made sense. Deep Intense Rock surfaced "Storm Runner" and "Iron Cathedral," which also felt right.
 
-The adversarial profiles were where the system broke in interesting ways. The Intense Folkie result was the most striking. A user who asked for folk music with energy 0.95 got "Pine & Candle" as their #1 recommendation — a quiet acoustic folk song with energy 0.31. That is the opposite of what was asked for. The reason is that "Pine & Candle" is the only folk song in the catalog, so it collected the full genre bonus regardless of how wrong everything else was. The system was not broken. It did exactly what the code said. The problem was in the design assumption that genre match should always add the same number of points, regardless of how few songs of that genre exist. The K-Pop Fan failure was different — the genre does not exist in the catalog at all, so the system silently returned EDM recommendations with no indication that the genre preference was completely ignored. Before the logging guardrail was added, there was no way to even know that happened.
+The adversarial profiles were where the system broke in interesting ways. The Intense Folkie result was the most striking. A user who asked for folk music with energy 0.95 got "Pine & Candle" as their #1 recommendation, a quiet acoustic folk song with energy 0.31. That is the opposite of what was asked for. The reason is that "Pine & Candle" is the only folk song in the catalog, so it collected the full genre bonus regardless of how wrong everything else was. The system was not broken. It did exactly what the code said. The problem was in the design assumption that genre match should always add the same number of points, regardless of how few songs of that genre exist. The K-Pop Fan failure was different. The genre does not exist in the catalog at all, so the system silently returned EDM recommendations with no indication that the genre preference was completely ignored. Before the logging guardrail was added, there was no way to even know that happened.
 
-If I had more time, the first fix would be scaling the genre bonus by catalog density — fewer songs in a genre means a smaller bonus, so a single label match cannot override every numeric signal. That one change would partially fix both the Intense Folkie and K-Pop Fan problems at the same time.
+If I had more time, the first fix would be scaling the genre bonus by catalog density. Fewer songs in a genre would mean a smaller bonus, so a single label match cannot override every numeric signal. That one change would partially fix both the Intense Folkie and K-Pop Fan problems at the same time.
 
 ---
 
 ## Reflection
 
-The biggest thing this project taught me is that a system can follow its rules perfectly and still give a completely wrong answer. When "Pine & Candle" ranked first for the Intense Folkie profile, the code was not broken. It did exactly what it was supposed to do. The bug was in the assumptions behind the design, not in the implementation. That is an uncomfortable thing to realize — it means you cannot just test whether the code runs. You have to test whether the results make sense, and those are not the same question.
+The biggest thing this project taught me is that a system can follow its rules perfectly and still give a completely wrong answer. When "Pine & Candle" ranked first for the Intense Folkie profile, the code was not broken. It did exactly what it was supposed to do. The bug was in the assumptions behind the design, not in the implementation. That is an uncomfortable thing to realize. You cannot just test whether the code runs. You have to test whether the results make sense, and those are not the same question.
 
-Building this changed how I think about real recommenders like Spotify or TikTok. I used to assume that a surprising recommendation meant the system had learned something subtle about my taste. Now I think it is just as likely to be a weighting artifact — some feature I accidentally signaled strongly that pulled results in a direction I did not intend. The output always looks confident. A clean list of five songs with scores and explanations looks authoritative whether it is right or wrong. The K-Pop Fan profile is the clearest example: the system returned a formatted, scored, explained list of five recommendations and nothing in that output showed that the genre preference was completely ignored.
+Building this changed how I think about real recommenders like Spotify or TikTok. I used to assume that a surprising recommendation meant the system had learned something subtle about my taste. Now I think it is just as likely to be a weighting artifact, some feature I accidentally signaled strongly that pulled results in a direction I did not intend. The output always looks confident. A clean list of five songs with scores and explanations looks authoritative whether it is right or wrong. The K-Pop Fan profile is the clearest example: the system returned a formatted, scored, explained list of five recommendations and nothing in that output showed that the genre preference was completely ignored.
 
-AI tools helped a lot during development — specifically for spotting patterns across all nine profiles at once. When I asked Copilot to compare results across profiles, it caught that energy was dominating three different profiles for three different reasons, which I had not noticed looking at them one at a time. The flawed suggestion came when the AI predicted what would happen for the Sad But Happy profile before I actually ran the code. The prediction sounded reasonable but was wrong — the mood bonus overpowered the valence signal more than expected. That is the lesson: AI predictions and actual outputs are not the same thing, and you still have to run the code yourself to know what actually happens.
+AI tools helped a lot during development, specifically for spotting patterns across all nine profiles at once. When I asked Copilot to compare results across profiles, it caught that energy was dominating three different profiles for three different reasons, which I had not noticed looking at them one at a time. The flawed suggestion came when the AI predicted what would happen for the Sad But Happy profile before I actually ran the code. The prediction sounded reasonable but was wrong. The mood bonus overpowered the valence signal more than expected. That is the lesson: AI predictions and actual outputs are not the same thing, and you still have to run the code yourself to know what actually happens.
 
 
 ## Profile Results
@@ -323,9 +323,9 @@ AI tools helped a lot during development — specifically for spotting patterns 
 
 ## Known Limitations
 
-- Catalog is 20 songs — rare genres (folk, ambient) have 1–2 songs, so the genre bonus dominates for those profiles
-- Mood matching is exact string only — "euphoric" and "happy" score zero similarity despite being emotionally close
-- No diversity enforcement — top 5 can all be the same genre
+- Catalog is 20 songs. Rare genres (folk, ambient) have 1-2 songs, so the genre bonus dominates for those profiles
+- Mood matching is exact string only. "Euphoric" and "happy" score zero similarity despite being emotionally close
+- No diversity enforcement. The top 5 can all be the same genre
 - K-pop, Latin, Afrobeats, and non-Western genres are absent from the catalog
 
 See [`model_card.md`](model_card.md) for a full bias analysis.
