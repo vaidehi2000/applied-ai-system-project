@@ -85,7 +85,21 @@ The K-Pop Fan profile confirmed a different failure mode: when a user's favorite
 
 ---
 
-## 9. Personal Reflection
+## 9. Ethics and Responsible Use
+
+**Could this system be misused, and how would you prevent it?**
+
+At this scale — 20 songs, a classroom project — direct misuse is unlikely. But the failure modes here map directly to real harms at production scale. A system that silently ignores a user's genre preference (the K-Pop Fan case) and returns confident-looking results without any indication something went wrong could be used to push users toward content the platform wants to surface rather than content the user actually wants. The formatting makes it indistinguishable from a genuine match. Preventing this requires mandatory warnings when key preferences can't be satisfied, not just graceful degradation. The logging guardrail added in this version is a start — `WARNING: Genre 'k-pop' not found in catalog` surfaces the failure rather than burying it. In a real system, that warning should reach the user interface, not just a log file.
+
+The broader misuse risk for recommenders is filter bubbles: a high-energy user who never sees calm songs, or a mainstream-catalog system that structurally under-serves listeners whose taste falls outside the represented genres. This system has both problems by design. Preventing them requires intentional diversity enforcement and honest documentation of catalog gaps — both of which are listed as future work in this card.
+
+**What surprised you while testing reliability?**
+
+The most surprising result was how consistent the broken outputs looked compared to the correct ones. The K-Pop Fan profile returned a clean, scored, explained list of five songs — identical in format to the Chill Lofi results that were genuinely good. Nothing in the output flagged that the genre preference was completely ignored. I expected failed cases to look obviously wrong. Instead they looked authoritative. That is the reliability risk that formal testing alone doesn't catch: the system doesn't crash, it just misleads. The adversarial profiles were specifically designed to surface this, and running them showed that formatted confidence is not the same as correctness — a distinction that matters a lot when real users can't see the scoring logic behind the results.
+
+---
+
+## 10. Personal Reflection
 
 **Biggest learning moment**
 
