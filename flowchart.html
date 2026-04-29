@@ -22,7 +22,7 @@
 </head>
 <body>
   <h1>Music Recommender — System Architecture</h1>
-  <p>Input → Validate → Score → Rank → RAG (Claude) → Output · Testing runs in parallel</p>
+  <p>Input → Validate → Score → Rank → RAG (Gemini) → Output · Testing runs in parallel</p>
 
   <div class="mermaid">
 flowchart TD
@@ -45,7 +45,7 @@ flowchart TD
     K --> M([CLI Output\nRanked songs + scores\n+ plain-language reasons])
     K --> R[RAG Step\nTop K songs retrieved\nas context]
 
-    R --> AI[Claude API\nclaude-haiku-4-5\nGenerates 2-3 sentence\nnatural-language summary\ngrounded in retrieved songs]
+    R --> AI[Gemini API\ngemini-2.5-flash\nGenerates 2-3 sentence\nnatural-language summary\ngrounded in retrieved songs]
     AI --> AIS([AI Summary\nappended to CLI output])
 
     LOG[Logging\nINFO: songs loaded · profile scoring · AI success\nWARNING: missing genre · sparse catalog · no API key\nERROR: API failure]
