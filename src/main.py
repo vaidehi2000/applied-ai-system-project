@@ -5,6 +5,7 @@ Command line runner for the Music Recommender Simulation.
 import logging
 from pathlib import Path
 from recommender import load_songs, recommend_songs, generate_rag_explanation
+from agent import run_agent
 
 # Configure logging once at the entry point: INFO to console + persistent log file
 _LOG_FILE = Path(__file__).parent.parent / "recommender.log"
@@ -94,5 +95,28 @@ def main() -> None:
         print(f"\n  AI Summary:\n  {ai_summary}\n")
 
 
+def run_agent_demo(songs: list) -> None:
+    """Run the agentic workflow on one clean and one adversarial profile."""
+    print("\n" + "#" * 54)
+    print("  AGENT MODE — Multi-Step Reasoning Demo")
+    print("#" * 54)
+
+    agent_profiles = {
+        "Chill Lofi": {
+            "genre": "lofi", "mood": "chill", "energy": 0.2,
+        },
+        "Intense Folkie": {
+            "genre": "folk", "mood": "intense",
+            "energy": 0.95, "valence": 0.5,
+            "danceability": 0.9, "acousticness": 0.9,
+        },
+    }
+
+    for profile_name, user_prefs in agent_profiles.items():
+        logger.info("Running agent for profile: %s", profile_name)
+        run_agent(user_prefs, songs, k=5)
+
+
 if __name__ == "__main__":
     main()
+    run_agent_demo(load_songs(str(CSV_PATH)))
