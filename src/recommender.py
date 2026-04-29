@@ -313,10 +313,29 @@ def recommend_songs(user_prefs: Dict, songs: List[Dict], k: int = 5) -> List[Tup
     """Return the top-k songs sorted by score descending using score_songs."""
     return sorted(score_songs(user_prefs, songs), key=lambda x: x[1], reverse=True)[:k]
 
+def _load_model_context() -> str:
+    """Load known limitations from model_card.md as additional RAG context source."""
+    from pathlib import Path
+    model_card_path = Path(__file__).parent.parent / "model_card.md"
+    if not model_card_path.exists():
+        return ""
+    text = model_card_path.read_text(encoding="utf-8")
+    # Extract only the Limitations section to keep the prompt focused
+    start = text.find("## 6. Limitations")
+    end = text.find("\n## ", start + 1)
+    if start == -1:
+        return ""
+    section = text[start:end].strip() if end != -1 else text[start:].strip()
+    logger.info("Loaded model limitations context from model_card.md (%d chars)", len(section))
+    return section
+
+
 def generate_rag_explanation(user_prefs: Dict, top_songs: List[Dict]) -> str:
     """
-    RAG step: retrieve the top songs (already scored), then send them to Gemini
-    to generate a natural-language explanation grounded in that retrieved data.
+    Multi-source RAG step:
+      Source 1 — top scored songs from the catalog (primary retrieval)
+      Source 2 — known limitations section from model_card.md (secondary context)
+    Both sources are sent to Gemini to generate a grounded natural-language summary.
     """
     import os
     from dotenv import load_dotenv
@@ -330,7 +349,7 @@ def generate_rag_explanation(user_prefs: Dict, top_songs: List[Dict]) -> str:
 
     client = genai.Client(api_key=api_key)
 
-    # Format retrieved songs into a readable block for the prompt
+    # Source 1: retrieved songs
     song_lines = []
     for i, song in enumerate(top_songs, 1):
         song_lines.append(
@@ -340,18 +359,26 @@ def generate_rag_explanation(user_prefs: Dict, top_songs: List[Dict]) -> str:
         )
     retrieved = "\n".join(song_lines)
 
-    # Build a concise user preference summary
+    # Source 2: model limitations from model_card.md
+    model_context = _load_model_context()
+    limitations_block = (
+        f"\n\nAdditional context about known system limitations:\n{model_context}"
+        if model_context else ""
+    )
+
     prefs_summary = ", ".join(f"{k}={v}" for k, v in user_prefs.items())
 
     prompt = (
         f"A music listener has these preferences: {prefs_summary}.\n\n"
-        f"Based only on the following songs retrieved from the catalog:\n{retrieved}\n\n"
-        f"In 2-3 sentences, explain why these songs are a good match for this listener. "
-        f"Be specific — reference the song titles and their attributes."
+        f"Based on the following songs retrieved from the catalog:\n{retrieved}"
+        f"{limitations_block}\n\n"
+        f"In 2-3 sentences, explain why these songs are a good match. "
+        f"If a known limitation affects this result, briefly mention it. "
+        f"Be specific — reference song titles."
     )
 
     try:
-        logger.info("Requesting AI summary for top %d songs", len(top_songs))
+        logger.info("Requesting AI summary for top %d songs (multi-source RAG)", len(top_songs))
         response = client.models.generate_content(
             model="gemini-2.5-flash", contents=prompt
         )
