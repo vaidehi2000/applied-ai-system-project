@@ -1,4 +1,4 @@
-# 🎵 VibeMatch — Applied AI Music Recommender
+# 🎵 SongPicker — Applied AI Music Recommender
 
 ## Base Project
 
