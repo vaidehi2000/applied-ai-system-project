@@ -2,8 +2,12 @@
 Command line runner for the Music Recommender Simulation.
 """
 
+import sys
 import logging
 from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).parent))
+
 from recommender import load_songs, recommend_songs, generate_rag_explanation
 from agent import run_agent
 
@@ -25,8 +29,11 @@ def main() -> None:
     songs = load_songs(str(CSV_PATH))
     print(f"Loaded {len(songs)} songs\n")
 
-    # Distinct user preference profiles
-    profiles = {
+    # DEMO_MODE: set to True to run only 3 profiles (saves API quota for recording)
+    # Set to False to run all 9 profiles
+    DEMO_MODE = True
+
+    all_profiles = {
         "High-Energy Pop": {
             "genre": "pop", "mood": "happy", "energy": 0.9,
         },
@@ -71,6 +78,14 @@ def main() -> None:
             "speechiness": 1.0,
         },
     }
+
+    demo_profiles = {
+        "Chill Lofi": all_profiles["Chill Lofi"],
+        "K-Pop Fan": all_profiles["K-Pop Fan"],
+        "High-Energy Pop": all_profiles["High-Energy Pop"],
+    }
+
+    profiles = demo_profiles if DEMO_MODE else all_profiles
 
     for profile_name, user_prefs in profiles.items():
         logger.info("Scoring profile: %s", profile_name)
