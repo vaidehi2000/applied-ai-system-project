@@ -315,19 +315,20 @@ def recommend_songs(user_prefs: Dict, songs: List[Dict], k: int = 5) -> List[Tup
 
 def generate_rag_explanation(user_prefs: Dict, top_songs: List[Dict]) -> str:
     """
-    RAG step: retrieve the top songs (already scored), then send them to Claude
+    RAG step: retrieve the top songs (already scored), then send them to Gemini
     to generate a natural-language explanation grounded in that retrieved data.
     """
     import os
     from dotenv import load_dotenv
-    import anthropic
+    from google import genai
 
     load_dotenv()
-    api_key = os.environ.get("ANTHROPIC_API_KEY")
+    api_key = os.environ.get("GEMINI_API_KEY")
     if not api_key:
-        logger.warning("ANTHROPIC_API_KEY is not set — AI summaries will be unavailable")
+        logger.warning("GEMINI_API_KEY is not set — AI summaries will be unavailable")
         return "[AI summary unavailable: API key not configured]"
-    client = anthropic.Anthropic(api_key=api_key)
+
+    client = genai.Client(api_key=api_key)
 
     # Format retrieved songs into a readable block for the prompt
     song_lines = []
@@ -351,13 +352,11 @@ def generate_rag_explanation(user_prefs: Dict, top_songs: List[Dict]) -> str:
 
     try:
         logger.info("Requesting AI summary for top %d songs", len(top_songs))
-        message = client.messages.create(
-            model="claude-haiku-4-5-20251001",
-            max_tokens=256,
-            messages=[{"role": "user", "content": prompt}],
+        response = client.models.generate_content(
+            model="gemini-2.5-flash", contents=prompt
         )
         logger.info("AI summary generated successfully")
-        return message.content[0].text
+        return response.text
     except Exception as e:
-        logger.error("Claude API call failed: %s", e)
+        logger.error("Gemini API call failed: %s", e)
         return f"[AI summary unavailable: {e}]"
