@@ -31,7 +31,7 @@ def main() -> None:
 
     # DEMO_MODE: set to True to run only 3 profiles (saves API quota for recording)
     # Set to False to run all 9 profiles
-    DEMO_MODE = True
+    DEMO_MODE = False
 
     all_profiles = {
         "High-Energy Pop": {
